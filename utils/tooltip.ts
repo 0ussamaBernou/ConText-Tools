@@ -215,88 +215,119 @@ const TOOLTIP_CSS = `
   height: 18px;
 }
 
-/* Section 3 & 4: Menu lists */
-.ctx-menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+/* Dropdown style */
+.ctx-dropdown-container {
+  position: relative;
+  width: 100%;
 }
 
-.ctx-menu-item {
+.ctx-dropdown-trigger {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: #334155;
+  justify-content: space-between;
+  width: 100%;
+  height: 36px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  color: #1e293b;
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.12s ease,
-              color 0.12s ease,
-              transform 0.1s ease;
+  outline: none;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
 }
 
-.ctx-menu-item:hover {
-  background: rgba(255, 255, 255, 0.5);
+.ctx-dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ctx-dropdown-trigger:active {
+  transform: scale(0.99);
+}
+
+.ctx-dropdown-arrow {
+  display: flex;
+  align-items: center;
+  color: #475569;
+  transition: transform 0.2s ease;
+}
+
+.ctx-dropdown-container.open .ctx-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.ctx-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: rgba(240, 245, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(28, 43, 70, 0.15);
+  padding: 6px;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.ctx-dropdown-container.open .ctx-dropdown-menu {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.ctx-dropdown-group-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  padding: 6px 8px 4px;
+}
+
+.ctx-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: #334155;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+}
+
+.ctx-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.7);
   color: #0f172a;
 }
 
-.ctx-menu-item:active {
-  background: rgba(255, 255, 255, 0.75);
+.ctx-dropdown-item:active {
   transform: scale(0.98);
 }
 
-.ctx-item-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #475569;
-  width: 16px;
-  height: 16px;
-}
-
-.ctx-menu-item:hover .ctx-item-icon {
-  color: #0f172a;
-}
-
-/* Divider */
-.ctx-divider {
+.ctx-dropdown-divider {
   height: 1px;
-  background: rgba(0, 0, 0, 0.06);
-  margin: 8px 4px;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 4px;
 }
 
-/* Bounding arrow pointing to selection */
-.ctx-arrow {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: rgba(240, 245, 255, 0.75);
-  transform: translateY(-50%) rotate(45deg);
-  z-index: -1;
-}
 
-/* Tooltip is to the left of selection (arrow is on the right pointing right) */
-.ctx-tooltip.arrow-right .ctx-arrow {
-  right: -6px;
-  left: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  border-right: 1px solid rgba(255, 255, 255, 0.4);
-  border-bottom: none;
-  border-left: none;
-}
-
-/* Tooltip is to the right of selection (arrow is on the left pointing left) */
-.ctx-tooltip.arrow-left .ctx-arrow {
-  left: -6px;
-  right: auto;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-  border-left: 1px solid rgba(255, 255, 255, 0.4);
-  border-top: none;
-  border-right: none;
-}
 
 /* Error message styling */
 .ctx-error {
@@ -372,99 +403,45 @@ export function createTooltip(): TooltipController {
       </button>
     </div>
 
-    <div class="ctx-menu-list">
-      <div class="ctx-menu-item" data-action="friendly">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-            <line x1="9" y1="9" x2="9.01" y2="9"></line>
-            <line x1="15" y1="9" x2="15.01" y2="9"></line>
+    <div class="ctx-dropdown-container">
+      <button class="ctx-dropdown-trigger" type="button">
+        <span>Choose preset…</span>
+        <span class="ctx-dropdown-arrow">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </span>
-        Friendly
-      </div>
+      </button>
       
-      <div class="ctx-menu-item" data-action="professional">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-          </svg>
-        </span>
-        Professional
-      </div>
-      
-      <div class="ctx-menu-item" data-action="concise">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="3" x2="12" y2="9"></line>
-            <polyline points="9 6 12 9 15 6"></polyline>
-            <line x1="12" y1="21" x2="12" y2="15"></line>
-            <polyline points="9 18 12 15 15 18"></polyline>
-            <line x1="4" y1="12" x2="20" y2="12"></line>
-          </svg>
-        </span>
-        Concise
+      <div class="ctx-dropdown-menu">
+        <div class="ctx-dropdown-group-title">Tones</div>
+        <div class="ctx-dropdown-item" data-action="friendly">
+          <span>😊</span> Friendly
+        </div>
+        <div class="ctx-dropdown-item" data-action="professional">
+          <span>💼</span> Professional
+        </div>
+        <div class="ctx-dropdown-item" data-action="concise">
+          <span>↕</span> Concise
+        </div>
+        
+        <div class="ctx-dropdown-divider"></div>
+        
+        <div class="ctx-dropdown-group-title">Formats</div>
+        <div class="ctx-dropdown-item" data-action="summary">
+          <span>📝</span> Summary
+        </div>
+        <div class="ctx-dropdown-item" data-action="key_points">
+          <span>✨</span> Key Points
+        </div>
+        <div class="ctx-dropdown-item" data-action="table">
+          <span>📊</span> Table
+        </div>
+        <div class="ctx-dropdown-item" data-action="list">
+          <span>🔢</span> List
+        </div>
       </div>
     </div>
-
-    <div class="ctx-divider"></div>
-
-    <div class="ctx-menu-list">
-      <div class="ctx-menu-item" data-action="summary">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="4" y1="6" x2="20" y2="6"></line>
-            <line x1="4" y1="12" x2="16" y2="12"></line>
-            <line x1="4" y1="18" x2="12" y2="18"></line>
-          </svg>
-        </span>
-        Summary
-      </div>
-      
-      <div class="ctx-menu-item" data-action="key_points">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="9" y1="6" x2="20" y2="6"></line>
-            <line x1="9" y1="12" x2="20" y2="12"></line>
-            <line x1="9" y1="18" x2="20" y2="18"></line>
-            <circle cx="5" cy="6" r="1"></circle>
-            <circle cx="5" cy="12" r="1"></circle>
-            <circle cx="5" cy="18" r="1"></circle>
-          </svg>
-        </span>
-        Key Points
-      </div>
-      
-      <div class="ctx-menu-item" data-action="table">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="3" y1="9" x2="21" y2="9"></line>
-            <line x1="3" y1="15" x2="21" y2="15"></line>
-            <line x1="10" y1="3" x2="10" y2="21"></line>
-          </svg>
-        </span>
-        Table
-      </div>
-      
-      <div class="ctx-menu-item" data-action="list">
-        <span class="ctx-item-icon">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="10" y1="6" x2="21" y2="6"></line>
-            <line x1="10" y1="12" x2="21" y2="12"></line>
-            <line x1="10" y1="18" x2="21" y2="18"></line>
-            <path d="M4 6h1v4"></path>
-            <path d="M4 10h2"></path>
-            <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
-          </svg>
-        </span>
-        List
-      </div>
-    </div>
-    
-    <div class="ctx-arrow"></div>
   `;
 
   shadow.appendChild(tooltip);
@@ -472,12 +449,28 @@ export function createTooltip(): TooltipController {
 
   // DOM Elements
   const input = tooltip.querySelector('.ctx-input') as HTMLInputElement;
-  const arrow = tooltip.querySelector('.ctx-arrow') as HTMLElement;
+  const dropdownContainer = tooltip.querySelector('.ctx-dropdown-container') as HTMLElement;
+  const dropdownTrigger = tooltip.querySelector('.ctx-dropdown-trigger') as HTMLButtonElement;
 
   // State
   let isVisible = false;
   let hideTimeout: ReturnType<typeof setTimeout> | null = null;
   let actionHandler: ((action: ProcessActionType, customPrompt?: string) => void) | null = null;
+
+  // Dropdown toggle
+  dropdownTrigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropdownContainer.classList.toggle('open');
+  });
+
+  // Close dropdown on click outside
+  tooltip.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!dropdownContainer.contains(target)) {
+      dropdownContainer.classList.remove('open');
+    }
+  });
 
   // Event Delegation for action items
   tooltip.addEventListener('click', (e) => {
@@ -490,6 +483,7 @@ export function createTooltip(): TooltipController {
     e.preventDefault();
     e.stopPropagation();
 
+    dropdownContainer.classList.remove('open');
     actionHandler?.(action);
   });
 
@@ -529,6 +523,9 @@ export function createTooltip(): TooltipController {
     // Clear input
     input.value = '';
 
+    // Close dropdown
+    dropdownContainer.classList.remove('open');
+
     // Calculate position: to the left of the selection
     const tooltipWidth = 270;
     let x = rect.left - tooltipWidth - TOOLTIP_OFFSET_Y;
@@ -564,19 +561,6 @@ export function createTooltip(): TooltipController {
     tooltip.style.top = `${tooltipTop}px`;
     tooltip.style.bottom = 'auto';
 
-    tooltip.classList.remove('arrow-left', 'arrow-right');
-    tooltip.classList.add(arrowClass);
-
-    // Position arrow vertically relative to selection center
-    let arrowTop = selectionCenterY - tooltipTop;
-    // Clamp arrow position within the rounded corners of the card
-    if (arrowTop < 16) arrowTop = 16;
-    if (arrowTop > tooltipHeight - 16) arrowTop = tooltipHeight - 16;
-    
-    arrow.style.top = `${arrowTop}px`;
-    arrow.style.left = 'auto';
-    arrow.style.right = 'auto';
-
     tooltip.classList.add('visible');
     isVisible = true;
   }
@@ -586,6 +570,9 @@ export function createTooltip(): TooltipController {
 
     // De-focus input
     input.blur();
+
+    // Close dropdown
+    dropdownContainer.classList.remove('open');
 
     tooltip.classList.remove('visible');
     tooltip.classList.add('hiding');
