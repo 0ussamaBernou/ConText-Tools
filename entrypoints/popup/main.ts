@@ -15,9 +15,12 @@ const openrouterEyeIcon = document.getElementById('openrouter-eye-icon') as HTML
 
 const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
 const enabledToggle = document.getElementById('enabled-toggle') as HTMLInputElement;
-const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
 const testBtn = document.getElementById('test-btn') as HTMLButtonElement;
 const statusEl = document.getElementById('status') as HTMLDivElement;
+
+const saveIndicator = document.getElementById('save-indicator') as HTMLDivElement;
+const indicatorDot = saveIndicator.querySelector('.indicator-dot') as HTMLSpanElement;
+const indicatorText = saveIndicator.querySelector('.indicator-text') as HTMLSpanElement;
 
 function isOpenRouterModel(modelName: string): boolean {
   return modelName.includes('/');
@@ -47,17 +50,79 @@ async function loadSettings() {
   updateKeyFieldsVisibility();
 }
 
-// --- Save settings ---
-async function saveSettings() {
-  const settings: ExtensionSettings = {
-    apiKey: apiKeyInput.value.trim(),
-    openrouterApiKey: openrouterKeyInput.value.trim(),
-    model: modelSelect.value,
-    enabled: enabledToggle.checked,
+// --- Debounce helper ---
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  
+  const debounced = function (...args: Parameters<T>) {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      fn(...args);
+    }, delay);
   };
 
-  await browser.storage.local.set({ settings });
-  showStatus('Settings saved ✓', 'success');
+  debounced.cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
+  return debounced;
+}
+
+let hideTimeout: ReturnType<typeof setTimeout>;
+
+function showSaving() {
+  clearTimeout(hideTimeout);
+  saveIndicator.classList.add('show', 'saving');
+  indicatorText.textContent = 'Saving…';
+}
+
+async function saveSettingsQuietly() {
+  try {
+    const settings: ExtensionSettings = {
+      apiKey: apiKeyInput.value.trim(),
+      openrouterApiKey: openrouterKeyInput.value.trim(),
+      model: modelSelect.value,
+      enabled: enabledToggle.checked,
+    };
+    await browser.storage.local.set({ settings });
+    
+    saveIndicator.classList.remove('saving');
+    indicatorText.textContent = 'Saved';
+    
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+      saveIndicator.classList.remove('show');
+    }, 2000);
+  } catch (err) {
+    console.error('[Writing Tools] Auto-save error:', err);
+    saveIndicator.classList.remove('saving');
+    indicatorText.textContent = 'Error';
+  }
+}
+
+const debouncedSave = debounce(saveSettingsQuietly, 500);
+
+function handleInputChange() {
+  showSaving();
+  debouncedSave();
+}
+
+function handleImmediateChange() {
+  showSaving();
+  saveSettingsQuietly();
+}
+
+// --- Save settings ---
+async function saveSettings() {
+  debouncedSave.cancel();
+  showSaving();
+  await saveSettingsQuietly();
 }
 
 // --- Show/hide Gemini API key ---
@@ -76,21 +141,16 @@ toggleOpenrouterKeyBtn.addEventListener('click', () => {
   openrouterEyeIcon.textContent = openrouterKeyVisible ? '🙈' : '👁';
 });
 
-// --- Model selection change ---
-modelSelect.addEventListener('change', updateKeyFieldsVisibility);
+// --- Event listeners for auto-save ---
+apiKeyInput.addEventListener('input', handleInputChange);
+openrouterKeyInput.addEventListener('input', handleInputChange);
 
-// --- Save handler ---
-saveBtn.addEventListener('click', async () => {
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving…';
-
-  try {
-    await saveSettings();
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = 'Save Settings';
-  }
+modelSelect.addEventListener('change', () => {
+  updateKeyFieldsVisibility();
+  handleImmediateChange();
 });
+
+enabledToggle.addEventListener('change', handleImmediateChange);
 
 // --- Test connection ---
 testBtn.addEventListener('click', async () => {

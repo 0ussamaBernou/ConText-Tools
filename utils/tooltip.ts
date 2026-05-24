@@ -43,13 +43,13 @@ const TOOLTIP_CSS = `
   box-sizing: border-box;
   width: 270px;
   padding: 12px;
-  background: rgba(240, 245, 255, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   box-shadow:
-    0 16px 40px rgba(28, 43, 70, 0.16),
-    0 4px 12px rgba(28, 43, 70, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   opacity: 0;
   transform: translateY(8px) scale(0.95);
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -84,8 +84,21 @@ const TOOLTIP_CSS = `
 
 .ctx-tooltip.ctx-loading .ctx-input,
 .ctx-tooltip.ctx-loading .ctx-grid-btn,
-.ctx-tooltip.ctx-loading .ctx-menu-item {
+.ctx-tooltip.ctx-loading .ctx-dropdown-trigger {
   opacity: 0.6;
+}
+
+/* Progress container to prevent rounded corner overflow */
+.ctx-progress-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  overflow: hidden;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  pointer-events: none;
 }
 
 /* Sliding Progress Bar at top */
@@ -98,8 +111,6 @@ const TOOLTIP_CSS = `
   background: linear-gradient(90deg, #3b82f6, #a855f7, #ec4899, #3b82f6);
   background-size: 200% 100%;
   animation: ctx-progress-slide 1.5s infinite linear;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
   opacity: 0;
   transition: opacity 0.22s ease;
 }
@@ -137,10 +148,10 @@ const TOOLTIP_CSS = `
   width: 100%;
   height: 36px;
   padding: 8px 10px 8px 34px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  color: #1e293b;
+  color: #f8fafc;
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 450;
@@ -151,14 +162,14 @@ const TOOLTIP_CSS = `
 }
 
 .ctx-input::placeholder {
-  color: #64748b;
+  color: #94a3b8;
   opacity: 0.85;
 }
 
 .ctx-input:focus {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 /* Section 2: Action buttons grid */
@@ -176,10 +187,10 @@ const TOOLTIP_CSS = `
   justify-content: center;
   gap: 6px;
   height: 58px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  color: #1e293b;
+  color: #f1f5f9;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;
@@ -191,12 +202,12 @@ const TOOLTIP_CSS = `
 }
 
 .ctx-grid-btn:hover {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.12);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .ctx-grid-btn:active {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.18);
   transform: scale(0.97);
 }
 
@@ -210,7 +221,7 @@ const TOOLTIP_CSS = `
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1e293b;
+  color: #f1f5f9;
   width: 18px;
   height: 18px;
 }
@@ -228,10 +239,10 @@ const TOOLTIP_CSS = `
   width: 100%;
   height: 36px;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  color: #1e293b;
+  color: #f1f5f9;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -241,7 +252,7 @@ const TOOLTIP_CSS = `
 }
 
 .ctx-dropdown-trigger:hover {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .ctx-dropdown-trigger:active {
@@ -251,7 +262,7 @@ const TOOLTIP_CSS = `
 .ctx-dropdown-arrow {
   display: flex;
   align-items: center;
-  color: #475569;
+  color: #cbd5e1;
   transition: transform 0.2s ease;
 }
 
@@ -266,10 +277,10 @@ const TOOLTIP_CSS = `
   width: 100%;
   max-height: 300px;
   overflow-y: auto;
-  background: rgba(240, 245, 255, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(28, 43, 70, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   padding: 6px;
   z-index: 100;
   opacity: 0;
@@ -304,7 +315,7 @@ const TOOLTIP_CSS = `
   gap: 8px;
   padding: 6px 8px;
   border-radius: 6px;
-  color: #334155;
+  color: #cbd5e1;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -313,8 +324,8 @@ const TOOLTIP_CSS = `
 }
 
 .ctx-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.7);
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
 }
 
 .ctx-dropdown-item:active {
@@ -323,18 +334,16 @@ const TOOLTIP_CSS = `
 
 .ctx-dropdown-divider {
   height: 1px;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   margin: 4px;
 }
 
-
-
 /* Error message styling */
 .ctx-error {
-  background: rgba(254, 226, 226, 0.8);
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 8px;
-  color: #991b1b;
+  color: #fca5a5;
   font-size: 12.2px;
   padding: 8px 10px;
   margin-top: 8px;
@@ -359,7 +368,9 @@ export function createTooltip(): TooltipController {
   const tooltip = document.createElement('div');
   tooltip.className = 'ctx-tooltip';
   tooltip.innerHTML = `
-    <div class="ctx-progress-bar"></div>
+    <div class="ctx-progress-container">
+      <div class="ctx-progress-bar"></div>
+    </div>
     
     <div class="ctx-input-container">
       <div class="ctx-input-icon">

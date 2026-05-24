@@ -9,10 +9,16 @@
   <body>
     <div id="app">
       <header class="header">
-        <div class="header-icon">✦</div>
-        <div class="header-text">
-          <h1>Writing tools</h1>
-          <p class="subtitle">AI-powered proofreading</p>
+        <div class="header-left">
+          <div class="header-icon">✦</div>
+          <div class="header-text">
+            <h1>Writing tools</h1>
+            <p class="subtitle">AI-powered proofreading</p>
+          </div>
+        </div>
+        <div id="save-indicator" class="save-indicator">
+          <span class="indicator-dot"></span>
+          <span class="indicator-text">Saved</span>
         </div>
       </header>
 
@@ -86,8 +92,7 @@
       </div>
 
       <div class="actions">
-        <button id="save-btn" class="btn btn-primary">Save Settings</button>
-        <button id="test-btn" class="btn btn-secondary">Test Connection</button>
+        <button id="test-btn" class="btn btn-primary">Test Connection</button>
       </div>
 
       <div id="status" class="status hidden"></div>

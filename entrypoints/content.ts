@@ -1,6 +1,6 @@
 import { createTooltip } from '@/utils/tooltip';
 import { getSelectionInfo, getSelectionRect, replaceSelectedText, type SelectionInfo } from '@/utils/selection';
-import type { ProcessTextRequest, ProcessTextSuccess, ProcessTextError } from '@/utils/messages';
+import type { ProcessTextRequest, ProcessTextSuccess, ProcessTextError, ExtensionSettings } from '@/utils/messages';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -9,6 +9,30 @@ export default defineContentScript({
     const tooltip = createTooltip();
     let currentSelection: SelectionInfo | null = null;
     let isProcessing = false;
+    let isEnabled = true;
+
+    // Load initial enabled status
+    browser.storage.local.get('settings').then((data) => {
+      const settings = data.settings as ExtensionSettings | undefined;
+      if (settings && typeof settings.enabled === 'boolean') {
+        isEnabled = settings.enabled;
+      }
+    });
+
+    // Listen for setting changes
+    const storageListener = (changes: Record<string, any>, areaName: string) => {
+      if (areaName === 'local' && changes.settings) {
+        const settings = changes.settings.newValue as ExtensionSettings | undefined;
+        if (settings && typeof settings.enabled === 'boolean') {
+          isEnabled = settings.enabled;
+          if (!isEnabled) {
+            tooltip.hide();
+            currentSelection = null;
+          }
+        }
+      }
+    };
+    browser.storage.onChanged.addListener(storageListener);
 
     // --- Action handler ---
     tooltip.onAction(async (action, customPrompt) => {
@@ -46,7 +70,7 @@ export default defineContentScript({
     let selectionTimeout: ReturnType<typeof setTimeout> | null = null;
 
     function handleSelection(mouseEvent?: MouseEvent) {
-      if (isProcessing) return;
+      if (!isEnabled || isProcessing) return;
 
       // Ignore selection changes if focus is inside the tooltip
       const isFocusInTooltip = document.activeElement === tooltip.shadowHost ||
@@ -116,6 +140,7 @@ export default defineContentScript({
     ctx.onInvalidated(() => {
       if (selectionTimeout) clearTimeout(selectionTimeout);
       if (scrollTimeout) clearTimeout(scrollTimeout);
+      browser.storage.onChanged.removeListener(storageListener);
       tooltip.destroy();
     });
   },
