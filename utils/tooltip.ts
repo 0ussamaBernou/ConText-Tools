@@ -151,7 +151,7 @@ const TOOLTIP_OFFSET_Y = 10; // pixels above the selection
 
 export function createTooltip(): TooltipController {
   // Create shadow host
-  const shadowHost = document.createElement('context-tools-tooltip');
+  const shadowHost = document.createElement('writing-tools-tooltip');
   const shadow = shadowHost.attachShadow({ mode: 'closed' });
 
   // Inject styles

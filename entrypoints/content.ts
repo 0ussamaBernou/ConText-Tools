@@ -28,10 +28,10 @@ export default defineContentScript({
           tooltip.hide();
         } else if (response?.type === 'PROOFREAD_ERROR') {
           const error = response as ProofreadError;
-          console.error('[ConText] Proofread error:', error.error);
+          console.error('[Writing Tools] Proofread error:', error.error);
         }
       } catch (err) {
-        console.error('[ConText] Message error:', err);
+        console.error('[Writing Tools] Message error:', err);
       } finally {
         tooltip.setLoading(false);
         isProcessing = false;

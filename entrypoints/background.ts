@@ -89,7 +89,7 @@ async function handleProofread(text: string): Promise<ResponseMessage> {
       text: corrected,
     };
   } catch (err: any) {
-    console.error('[ConText] AI SDK error:', err);
+    console.error('[Writing Tools] AI SDK error:', err);
 
     let errorMessage = 'Failed to proofread text.';
 

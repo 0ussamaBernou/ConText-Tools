@@ -96,7 +96,7 @@ export function replaceSelectedText(info: SelectionInfo, newText: string): boole
       return replaceInContentEditable(info, newText);
     }
   } catch (e) {
-    console.error('[ConText] Failed to replace text:', e);
+    console.error('[Writing Tools] Failed to replace text:', e);
     return false;
   }
 }
