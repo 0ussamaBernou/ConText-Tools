@@ -43,30 +43,45 @@ export default defineContentScript({
     });
 
     // --- Selection detection ---
-    let mouseUpCoords: { x: number; y: number } | null = null;
+    let selectionTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    function handleSelection(mouseEvent?: MouseEvent) {
+      if (isProcessing) return;
+
+      // Ignore selection changes if focus is inside the tooltip
+      const isFocusInTooltip = document.activeElement === tooltip.shadowHost ||
+                               tooltip.shadowHost.contains(document.activeElement);
+      if (isFocusInTooltip) return;
+
+      const info = getSelectionInfo();
+      if (info) {
+        currentSelection = info;
+        const rect = getSelectionRect(info, mouseEvent);
+        if (rect) {
+          tooltip.show(rect);
+        }
+      } else {
+        tooltip.hide();
+        currentSelection = null;
+      }
+    }
 
     document.addEventListener('mouseup', (e) => {
-      // Ignore clicks on our tooltip shadow host
       if (tooltip.shadowHost.contains(e.target as Node)) return;
 
-      mouseUpCoords = { x: e.clientX, y: e.clientY };
-
-      // Small delay to let the browser finalize the selection
+      // Small delay to let browser finalize selection, then show immediately
       setTimeout(() => {
-        if (isProcessing) return;
-
-        const info = getSelectionInfo();
-        if (info) {
-          currentSelection = info;
-          const rect = getSelectionRect(info, e);
-          if (rect) {
-            tooltip.show(rect);
-          }
-        } else {
-          tooltip.hide();
-          currentSelection = null;
-        }
+        if (selectionTimeout) clearTimeout(selectionTimeout);
+        handleSelection(e);
       }, 10);
+    });
+
+    document.addEventListener('selectionchange', () => {
+      if (selectionTimeout) clearTimeout(selectionTimeout);
+
+      selectionTimeout = setTimeout(() => {
+        handleSelection();
+      }, 150);
     });
 
     // --- Dismiss on mousedown outside ---
@@ -99,6 +114,8 @@ export default defineContentScript({
 
     // --- Cleanup on HMR / extension invalidation ---
     ctx.onInvalidated(() => {
+      if (selectionTimeout) clearTimeout(selectionTimeout);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
       tooltip.destroy();
     });
   },

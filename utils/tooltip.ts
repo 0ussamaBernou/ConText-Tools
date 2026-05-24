@@ -506,8 +506,12 @@ export function createTooltip(): TooltipController {
     }
   });
 
-  // Prevent mousedown from stealing focus from the editable field
+  // Prevent mousedown from stealing focus from the editable field, unless clicking on the input
   tooltip.addEventListener('mousedown', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('ctx-input')) {
+      return; // Allow focus on the input field
+    }
     e.preventDefault();
     e.stopPropagation();
   });
@@ -575,11 +579,6 @@ export function createTooltip(): TooltipController {
 
     tooltip.classList.add('visible');
     isVisible = true;
-
-    // Auto-focus input for quick command typing
-    setTimeout(() => {
-      input.focus();
-    }, 50);
   }
 
   function hide() {
