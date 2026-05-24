@@ -8,7 +8,10 @@ import type {
 } from '@/utils/messages';
 import { DEFAULT_SETTINGS } from '@/utils/messages';
 
-const SYSTEM_PROMPT = `You are a proofreading assistant. Your task is to fix grammar, spelling, punctuation, and style errors in the given text.
+import type { ProcessActionType } from '@/utils/messages';
+
+const SYSTEM_PROMPT_MAP: Record<ProcessActionType, string> = {
+  proofread: `You are a proofreading assistant. Your task is to fix grammar, spelling, punctuation, and style errors in the given text.
 
 Rules:
 - Return ONLY the corrected text — no explanations, no quotes, no prefixes.
@@ -17,39 +20,98 @@ Rules:
 - If the text is already correct, return it unchanged.
 - Preserve line breaks and formatting.
 - Do not add or remove content — only fix errors.
-- NEVER use "—" and ";".`;
+- NEVER use "—" and ";".`,
 
-function isOpenRouterModel(modelName: string): boolean {
-  return modelName.includes('/');
-}
+  rewrite: `You are a rewriting assistant. Your task is to rewrite the text to improve flow, clarity, and vocabulary while keeping the original meaning and language.
+
+Rules:
+- Return ONLY the rewritten text — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).
+- Preserve the original tone and intent.
+- Preserve line breaks and formatting.`,
+
+  friendly: `You are a writing assistant. Rewrite the given text to make the tone friendly, warm, and approachable, while preserving the original meaning, language, and formatting.
+
+Rules:
+- Return ONLY the rewritten text — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).
+- Preserve line breaks and formatting.`,
+
+  professional: `You are a writing assistant. Rewrite the given text to make the tone professional, polite, and executive-level, while preserving the original meaning, language, and formatting.
+
+Rules:
+- Return ONLY the rewritten text — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).
+- Preserve line breaks and formatting.`,
+
+  concise: `You are a writing assistant. Rewrite the given text to make it concise and direct, removing fluff while keeping the core meaning, language, and formatting.
+
+Rules:
+- Return ONLY the rewritten text — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).
+- Preserve line breaks and formatting.`,
+
+  summary: `You are a writing assistant. Summarize the given text concisely.
+
+Rules:
+- Return ONLY the summary — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).`,
+
+  key_points: `You are a writing assistant. Convert the given text into a list of key points (using bullet points).
+
+Rules:
+- Return ONLY the bullet points — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).`,
+
+  table: `You are a writing assistant. Convert the given text/data into a clean Markdown table representation.
+
+Rules:
+- Return ONLY the table — no explanations, no quotes, no prefixes.`,
+
+  list: `You are a writing assistant. Convert the given text into a formatted list (bulleted or numbered, depending on content structure).
+
+Rules:
+- Return ONLY the list — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).`,
+
+  custom: `You are a writing assistant. Modify the given text according to the user's instructions.
+
+Rules:
+- Return ONLY the modified text — no explanations, no quotes, no prefixes.
+- Preserve the original language (do not translate).`
+};
 
 async function getSettings(): Promise<ExtensionSettings> {
   const data = await browser.storage.local.get('settings');
   return { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
 }
 
-async function handleProofread(text: string): Promise<ResponseMessage> {
+function isOpenRouterModel(modelName: string): boolean {
+  return modelName.includes('/');
+}
+
+async function handleProcessText(text: string, action: ProcessActionType, customPrompt?: string): Promise<ResponseMessage> {
   const settings = await getSettings();
   const modelName = settings.model || 'gemini-3.1-flash-lite-preview';
   const isOR = isOpenRouterModel(modelName);
 
   if (isOR && !settings.openrouterApiKey) {
     return {
-      type: 'PROOFREAD_ERROR',
+      type: 'PROCESS_TEXT_ERROR',
       error: 'No OpenRouter API key configured. Click the extension icon to set up your OpenRouter API key.',
     };
   }
 
   if (!isOR && !settings.apiKey) {
     return {
-      type: 'PROOFREAD_ERROR',
+      type: 'PROCESS_TEXT_ERROR',
       error: 'No Gemini API key configured. Click the extension icon to set up your Gemini API key.',
     };
   }
 
   if (!settings.enabled) {
     return {
-      type: 'PROOFREAD_ERROR',
+      type: 'PROCESS_TEXT_ERROR',
       error: 'Extension is disabled.',
     };
   }
@@ -68,11 +130,20 @@ async function handleProofread(text: string): Promise<ResponseMessage> {
       modelInstance = google(modelName);
     }
 
+    const systemPrompt = SYSTEM_PROMPT_MAP[action] || SYSTEM_PROMPT_MAP.proofread;
     let promptText = text;
-    let systemText: string | undefined = SYSTEM_PROMPT;
+    let systemText: string | undefined = systemPrompt;
+
+    if (action === 'custom' && customPrompt) {
+      promptText = `Instruction: ${customPrompt}\n\nText to modify:\n${text}`;
+    }
 
     if (isOR) {
-      promptText = `${SYSTEM_PROMPT}\n\nText to proofread:\n${text}`;
+      if (action === 'custom' && customPrompt) {
+        promptText = `${systemPrompt}\n\nInstruction: ${customPrompt}\n\nText to modify:\n${text}`;
+      } else {
+        promptText = `${systemPrompt}\n\nText to process:\n${text}`;
+      }
       systemText = undefined;
     }
 
@@ -82,16 +153,16 @@ async function handleProofread(text: string): Promise<ResponseMessage> {
       prompt: promptText,
     });
 
-    const corrected = result.text.trim();
+    const processed = result.text.trim();
 
     return {
-      type: 'PROOFREAD_RESULT',
-      text: corrected,
+      type: 'PROCESS_TEXT_RESULT',
+      text: processed,
     };
   } catch (err: any) {
     console.error('[Writing Tools] AI SDK error:', err);
 
-    let errorMessage = 'Failed to proofread text.';
+    let errorMessage = 'Failed to process text.';
 
     if (err?.message?.includes('API key')) {
       errorMessage = 'Invalid API key. Please check your settings.';
@@ -104,7 +175,7 @@ async function handleProofread(text: string): Promise<ResponseMessage> {
     }
 
     return {
-      type: 'PROOFREAD_ERROR',
+      type: 'PROCESS_TEXT_ERROR',
       error: errorMessage,
     };
   }
@@ -171,15 +242,15 @@ export default defineBackground(() => {
         let response: ResponseMessage;
 
         switch (message.type) {
-          case 'PROOFREAD':
-            response = await handleProofread(message.text);
+          case 'PROCESS_TEXT':
+            response = await handleProcessText(message.text, message.action, message.customPrompt);
             break;
           case 'TEST_CONNECTION':
             response = await handleTestConnection();
             break;
           default:
             response = {
-              type: 'PROOFREAD_ERROR',
+              type: 'PROCESS_TEXT_ERROR',
               error: 'Unknown message type.',
             };
         }

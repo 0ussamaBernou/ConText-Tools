@@ -2,18 +2,32 @@
  * Message types for content ↔ background communication.
  */
 
-export interface ProofreadRequest {
-  type: 'PROOFREAD';
+export type ProcessActionType =
+  | 'proofread'
+  | 'rewrite'
+  | 'friendly'
+  | 'professional'
+  | 'concise'
+  | 'summary'
+  | 'key_points'
+  | 'table'
+  | 'list'
+  | 'custom';
+
+export interface ProcessTextRequest {
+  type: 'PROCESS_TEXT';
+  text: string;
+  action: ProcessActionType;
+  customPrompt?: string;
+}
+
+export interface ProcessTextSuccess {
+  type: 'PROCESS_TEXT_RESULT';
   text: string;
 }
 
-export interface ProofreadSuccess {
-  type: 'PROOFREAD_RESULT';
-  text: string;
-}
-
-export interface ProofreadError {
-  type: 'PROOFREAD_ERROR';
+export interface ProcessTextError {
+  type: 'PROCESS_TEXT_ERROR';
   error: string;
 }
 
@@ -27,8 +41,8 @@ export interface TestConnectionResult {
   error?: string;
 }
 
-export type RequestMessage = ProofreadRequest | TestConnectionRequest;
-export type ResponseMessage = ProofreadSuccess | ProofreadError | TestConnectionResult;
+export type RequestMessage = ProcessTextRequest | TestConnectionRequest;
+export type ResponseMessage = ProcessTextSuccess | ProcessTextError | TestConnectionResult;
 
 /**
  * Settings stored in browser.storage.local
@@ -46,3 +60,4 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   enabled: true,
   model: 'gemini-3.1-flash-lite-preview',
 };
+

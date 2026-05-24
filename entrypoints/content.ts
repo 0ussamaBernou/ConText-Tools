@@ -1,6 +1,6 @@
 import { createTooltip } from '@/utils/tooltip';
 import { getSelectionInfo, getSelectionRect, replaceSelectedText, type SelectionInfo } from '@/utils/selection';
-import type { ProofreadRequest, ProofreadSuccess, ProofreadError } from '@/utils/messages';
+import type { ProcessTextRequest, ProcessTextSuccess, ProcessTextError } from '@/utils/messages';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -10,28 +10,32 @@ export default defineContentScript({
     let currentSelection: SelectionInfo | null = null;
     let isProcessing = false;
 
-    // --- Proofread handler ---
-    tooltip.onProofread(async () => {
+    // --- Action handler ---
+    tooltip.onAction(async (action, customPrompt) => {
       if (!currentSelection || isProcessing) return;
       isProcessing = true;
       tooltip.setLoading(true);
 
       try {
         const response = await browser.runtime.sendMessage({
-          type: 'PROOFREAD',
+          type: 'PROCESS_TEXT',
           text: currentSelection.text,
-        } satisfies ProofreadRequest);
+          action,
+          customPrompt,
+        } satisfies ProcessTextRequest);
 
-        if (response?.type === 'PROOFREAD_RESULT') {
-          const result = response as ProofreadSuccess;
+        if (response?.type === 'PROCESS_TEXT_RESULT') {
+          const result = response as ProcessTextSuccess;
           replaceSelectedText(currentSelection, result.text);
           tooltip.hide();
-        } else if (response?.type === 'PROOFREAD_ERROR') {
-          const error = response as ProofreadError;
-          console.error('[Writing Tools] Proofread error:', error.error);
+        } else if (response?.type === 'PROCESS_TEXT_ERROR') {
+          const error = response as ProcessTextError;
+          console.error('[Writing Tools] Processing error:', error.error);
+          tooltip.showError(error.error);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('[Writing Tools] Message error:', err);
+        tooltip.showError(err?.message || 'Failed to send message to background.');
       } finally {
         tooltip.setLoading(false);
         isProcessing = false;
