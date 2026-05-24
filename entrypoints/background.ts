@@ -1,5 +1,6 @@
 import { generateText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import type {
   RequestMessage,
   ResponseMessage,
@@ -15,7 +16,12 @@ Rules:
 - Preserve the original tone and intent.
 - If the text is already correct, return it unchanged.
 - Preserve line breaks and formatting.
-- Do not add or remove content — only fix errors.`;
+- Do not add or remove content — only fix errors.
+- NEVER use "—" and ";".`;
+
+function isOpenRouterModel(modelName: string): boolean {
+  return modelName.includes('/');
+}
 
 async function getSettings(): Promise<ExtensionSettings> {
   const data = await browser.storage.local.get('settings');
@@ -24,11 +30,20 @@ async function getSettings(): Promise<ExtensionSettings> {
 
 async function handleProofread(text: string): Promise<ResponseMessage> {
   const settings = await getSettings();
+  const modelName = settings.model || 'gemini-3.1-flash-lite-preview';
+  const isOR = isOpenRouterModel(modelName);
 
-  if (!settings.apiKey) {
+  if (isOR && !settings.openrouterApiKey) {
     return {
       type: 'PROOFREAD_ERROR',
-      error: 'No API key configured. Click the extension icon to set up your Gemini API key.',
+      error: 'No OpenRouter API key configured. Click the extension icon to set up your OpenRouter API key.',
+    };
+  }
+
+  if (!isOR && !settings.apiKey) {
+    return {
+      type: 'PROOFREAD_ERROR',
+      error: 'No Gemini API key configured. Click the extension icon to set up your Gemini API key.',
     };
   }
 
@@ -40,14 +55,31 @@ async function handleProofread(text: string): Promise<ResponseMessage> {
   }
 
   try {
-    const google = createGoogleGenerativeAI({
-      apiKey: settings.apiKey,
-    });
+    let modelInstance;
+    if (isOR) {
+      const openrouter = createOpenRouter({
+        apiKey: settings.openrouterApiKey,
+      });
+      modelInstance = openrouter.chat(modelName);
+    } else {
+      const google = createGoogleGenerativeAI({
+        apiKey: settings.apiKey,
+      });
+      modelInstance = google(modelName);
+    }
+
+    let promptText = text;
+    let systemText: string | undefined = SYSTEM_PROMPT;
+
+    if (isOR) {
+      promptText = `${SYSTEM_PROMPT}\n\nText to proofread:\n${text}`;
+      systemText = undefined;
+    }
 
     const result = await generateText({
-      model: google(settings.model || 'gemini-2.0-flash'),
-      system: SYSTEM_PROMPT,
-      prompt: text,
+      model: modelInstance,
+      system: systemText,
+      prompt: promptText,
     });
 
     const corrected = result.text.trim();
@@ -80,24 +112,43 @@ async function handleProofread(text: string): Promise<ResponseMessage> {
 
 async function handleTestConnection(): Promise<ResponseMessage> {
   const settings = await getSettings();
+  const modelName = settings.model || 'gemini-3.1-flash-lite-preview';
+  const isOR = isOpenRouterModel(modelName);
 
-  if (!settings.apiKey) {
+  if (isOR && !settings.openrouterApiKey) {
     return {
       type: 'TEST_CONNECTION_RESULT',
       success: false,
-      error: 'No API key provided.',
+      error: 'No OpenRouter API key provided.',
+    };
+  }
+
+  if (!isOR && !settings.apiKey) {
+    return {
+      type: 'TEST_CONNECTION_RESULT',
+      success: false,
+      error: 'No Gemini API key provided.',
     };
   }
 
   try {
-    const google = createGoogleGenerativeAI({
-      apiKey: settings.apiKey,
-    });
+    let modelInstance;
+    if (isOR) {
+      const openrouter = createOpenRouter({
+        apiKey: settings.openrouterApiKey,
+      });
+      modelInstance = openrouter.chat(modelName);
+    } else {
+      const google = createGoogleGenerativeAI({
+        apiKey: settings.apiKey,
+      });
+      modelInstance = google(modelName);
+    }
 
     await generateText({
-      model: google(settings.model || 'gemini-2.0-flash'),
+      model: modelInstance,
       prompt: 'Say "ok".',
-      maxTokens: 5,
+      maxOutputTokens: 5,
     });
 
     return {

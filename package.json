@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.79",
+    "@openrouter/ai-sdk-provider": "^2.9.0",
     "ai": "^6.0.191"
   }
 }

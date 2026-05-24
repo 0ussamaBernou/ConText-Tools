@@ -2,29 +2,56 @@ import './style.css';
 import type { ExtensionSettings, TestConnectionRequest } from '@/utils/messages';
 import { DEFAULT_SETTINGS } from '@/utils/messages';
 
+const geminiKeyContainer = document.getElementById('gemini-key-container') as HTMLDivElement;
+const openrouterKeyContainer = document.getElementById('openrouter-key-container') as HTMLDivElement;
+
 const apiKeyInput = document.getElementById('api-key') as HTMLInputElement;
 const toggleKeyBtn = document.getElementById('toggle-key') as HTMLButtonElement;
 const eyeIcon = document.getElementById('eye-icon') as HTMLSpanElement;
+
+const openrouterKeyInput = document.getElementById('openrouter-key') as HTMLInputElement;
+const toggleOpenrouterKeyBtn = document.getElementById('toggle-openrouter-key') as HTMLButtonElement;
+const openrouterEyeIcon = document.getElementById('openrouter-eye-icon') as HTMLSpanElement;
+
 const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
 const enabledToggle = document.getElementById('enabled-toggle') as HTMLInputElement;
 const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
 const testBtn = document.getElementById('test-btn') as HTMLButtonElement;
 const statusEl = document.getElementById('status') as HTMLDivElement;
 
+function isOpenRouterModel(modelName: string): boolean {
+  return modelName.includes('/');
+}
+
+function updateKeyFieldsVisibility() {
+  const model = modelSelect.value;
+  if (isOpenRouterModel(model)) {
+    geminiKeyContainer.classList.add('hidden');
+    openrouterKeyContainer.classList.remove('hidden');
+  } else {
+    geminiKeyContainer.classList.remove('hidden');
+    openrouterKeyContainer.classList.add('hidden');
+  }
+}
+
 // --- Load settings ---
 async function loadSettings() {
   const data = await browser.storage.local.get('settings');
   const settings: ExtensionSettings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
 
-  apiKeyInput.value = settings.apiKey;
+  apiKeyInput.value = settings.apiKey || '';
+  openrouterKeyInput.value = settings.openrouterApiKey || '';
   modelSelect.value = settings.model;
   enabledToggle.checked = settings.enabled;
+
+  updateKeyFieldsVisibility();
 }
 
 // --- Save settings ---
 async function saveSettings() {
   const settings: ExtensionSettings = {
     apiKey: apiKeyInput.value.trim(),
+    openrouterApiKey: openrouterKeyInput.value.trim(),
     model: modelSelect.value,
     enabled: enabledToggle.checked,
   };
@@ -33,13 +60,24 @@ async function saveSettings() {
   showStatus('Settings saved ✓', 'success');
 }
 
-// --- Show/hide API key ---
+// --- Show/hide Gemini API key ---
 let keyVisible = false;
 toggleKeyBtn.addEventListener('click', () => {
   keyVisible = !keyVisible;
   apiKeyInput.type = keyVisible ? 'text' : 'password';
   eyeIcon.textContent = keyVisible ? '🙈' : '👁';
 });
+
+// --- Show/hide OpenRouter API key ---
+let openrouterKeyVisible = false;
+toggleOpenrouterKeyBtn.addEventListener('click', () => {
+  openrouterKeyVisible = !openrouterKeyVisible;
+  openrouterKeyInput.type = openrouterKeyVisible ? 'text' : 'password';
+  openrouterEyeIcon.textContent = openrouterKeyVisible ? '🙈' : '👁';
+});
+
+// --- Model selection change ---
+modelSelect.addEventListener('change', updateKeyFieldsVisibility);
 
 // --- Save handler ---
 saveBtn.addEventListener('click', async () => {

@@ -282,6 +282,10 @@ select {
   transition: opacity 0.2s ease;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .status.hidden {
   display: none;
 }

@@ -35,12 +35,14 @@ export type ResponseMessage = ProofreadSuccess | ProofreadError | TestConnection
  */
 export interface ExtensionSettings {
   apiKey: string;
+  openrouterApiKey: string;
   enabled: boolean;
   model: string;
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   apiKey: '',
+  openrouterApiKey: '',
   enabled: true,
-  model: 'gemini-2.0-flash',
+  model: 'gemini-3.1-flash-lite-preview',
 };

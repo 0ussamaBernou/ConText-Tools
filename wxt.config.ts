@@ -6,6 +6,9 @@ export default defineConfig({
     name: 'ConText Tools',
     description: 'AI-powered proofreading tooltip for text inputs. Select text, click Proofread, done.',
     permissions: ['storage'],
-    host_permissions: ['https://generativelanguage.googleapis.com/*'],
+    host_permissions: [
+      'https://generativelanguage.googleapis.com/*',
+      'https://openrouter.ai/*',
+    ],
   },
 });
