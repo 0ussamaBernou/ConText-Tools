@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ConText Tools — Settings</title>
+    <meta name="manifest.type" content="browser_action" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <div class="header-icon">✦</div>
+        <div class="header-text">
+          <h1>ConText Tools</h1>
+          <p class="subtitle">AI-powered proofreading</p>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="field">
+          <label for="api-key">Gemini API Key</label>
+          <div class="input-group">
+            <input
+              type="password"
+              id="api-key"
+              placeholder="Enter your API key…"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="button" id="toggle-key" class="icon-btn" title="Show/hide key">
+              <span id="eye-icon">👁</span>
+            </button>
+          </div>
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            class="help-link"
+          >Get a free API key →</a>
+        </div>
+
+        <div class="field">
+          <label for="model-select">Model</label>
+          <select id="model-select">
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          </select>
+        </div>
+
+        <div class="field toggle-field">
+          <label for="enabled-toggle">Enabled</label>
+          <label class="toggle">
+            <input type="checkbox" id="enabled-toggle" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="save-btn" class="btn btn-primary">Save Settings</button>
+        <button id="test-btn" class="btn btn-secondary">Test Connection</button>
+      </div>
+
+      <div id="status" class="status hidden"></div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
