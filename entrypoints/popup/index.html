@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Writing tools — Settings</title>
+    <meta name="manifest.type" content="browser_action" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <div class="header-left">
+          <div class="header-icon">✦</div>
+          <div class="header-text">
+            <h1>Writing tools</h1>
+            <p class="subtitle">AI-powered proofreading</p>
+          </div>
+        </div>
+        <div id="save-indicator" class="save-indicator">
+          <span class="indicator-dot"></span>
+          <span class="indicator-text">Saved</span>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="field" id="gemini-key-container">
+          <label for="api-key">Gemini API Key</label>
+          <div class="input-group">
+            <input
+              type="password"
+              id="api-key"
+              placeholder="Enter your Gemini API key…"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="button" id="toggle-key" class="icon-btn" title="Show/hide key">
+              <span id="eye-icon">👁</span>
+            </button>
+          </div>
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            class="help-link"
+          >Get a free Gemini API key →</a>
+        </div>
+
+        <div class="field hidden" id="openrouter-key-container">
+          <label for="openrouter-key">OpenRouter API Key</label>
+          <div class="input-group">
+            <input
+              type="password"
+              id="openrouter-key"
+              placeholder="Enter your OpenRouter API key…"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="button" id="toggle-openrouter-key" class="icon-btn" title="Show/hide key">
+              <span id="openrouter-eye-icon">👁</span>
+            </button>
+          </div>
+          <a
+            href="https://openrouter.ai/keys"
+            target="_blank"
+            class="help-link"
+          >Get an OpenRouter API key →</a>
+        </div>
+
+        <div class="field">
+          <label for="model-select">Model</label>
+          <select id="model-select">
+            <optgroup label="Google AI Studio (Direct)">
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
+            </optgroup>
+            <optgroup label="OpenRouter (Free Models)">
+              <option value="openai/gpt-oss-120b:free">GPT-OSS 120B (Free)</option>
+              <option value="nvidia/nemotron-3-nano-30b-a3b:free">Nemotron-3 Nano 30B (Free)</option>
+              <option value="liquid/lfm-2.5-1.2b-thinking:free">Liquid LFM 2.5 1.2B (Free)</option>
+              <option value="google/gemini-2.5-flash:free">Gemini 2.5 Flash (Free)</option>
+              <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field toggle-field">
+          <label for="enabled-toggle">Enabled</label>
+          <label class="toggle">
+            <input type="checkbox" id="enabled-toggle" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="test-btn" class="btn btn-primary">Test Connection</button>
+      </div>
+
+      <div id="status" class="status hidden"></div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

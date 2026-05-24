@@ -1,23 +1,26 @@
 {
-	"devDependencies": {
-		"@google/generative-ai": "^0.16.0",
-		"@tailwindcss/typography": "^0.5.13",
-		"@types/react": "^18.0.9",
-		"@types/react-dom": "^18.0.5",
-		"daisyui": "^4.12.10",
-		"extension": "latest",
-		"react": "^18.1.0",
-		"react-dom": "^18.1.0",
-		"tailwindcss": "^3.4.1",
-		"typescript": "5.3.3"
-	},
-	"scripts": {
-		"dev": "tailwindcss -i ./input.css -o output.css && extension dev",
-		"start": "tailwindcss -i ./input.css -o output.css && extension start",
-		"build": "tailwindcss -i ./input.css -o output.css && extension build",
-		"style": "tailwindcss -i ./input.css -o output.css --watch"
-	},
-	"name": "ConText-Tools",
-	"private": true,
-	"version": "0.2.0"
+  "name": "writing-tools",
+  "description": "AI-powered proofreading tooltip for text inputs",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wxt": "^0.20.26"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.79",
+    "@openrouter/ai-sdk-provider": "^2.9.0",
+    "ai": "^6.0.191"
+  }
 }
